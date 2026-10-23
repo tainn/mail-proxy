@@ -1,0 +1,20 @@
+services:
+  mail-proxy:
+    build:
+      context: "."
+      dockerfile: "Containerfile"
+    image: "mail-proxy:${VERSION}"
+    container_name: "mail-proxy"
+    restart: "unless-stopped"
+    networks:
+      - "mail-proxy"
+    ports:
+      - "3000:3000"
+    env_file:
+      - ".env"
+    environment:
+      - "VERSION"
+
+networks:
+  mail-proxy:
+    external: true

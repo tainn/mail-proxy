@@ -1,0 +1,10 @@
+# ide
+.idea
+*.iml
+
+# cargo
+Cargo.lock
+target
+
+# cfg
+.env
