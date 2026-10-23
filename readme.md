@@ -1,6 +1,8 @@
 # mail-proxy
 
-Proxy API for mails. Accepts a JSON request over HTTP and relays it as a properly structured MIME mail over SMTP.
+Proxy API for mails.
+
+Accepts a JSON request over HTTP and relays it as a properly structured MIME mail over SMTP.
 
 - Bodies can be written in **Markdown** (default), **HTML** or plain text.
 - Markdown is rendered into a styled, mail-client friendly HTML document.
@@ -93,22 +95,32 @@ Errors are returned as `{"error": "..."}`:
 | `502`  | SMTP server rejected the mail or could not be reached.      |
 | `504`  | SMTP server timed out.                                      |
 
-#### Example
+#### Examples
 
 ```sh
-curl -X POST http://localhost:3000/send \
-  -H "Authorization: Bearer $API_TOKEN" \
+curl -sS -X POST http://localhost:3000/send \
   -H "Content-Type: application/json" \
-  -d '{
-    "from": "Foo <foo@domain.tld>",
-    "to": ["Bar <bar@domain.tld>", "baz@domain.tld"],
-    "subject": "Weekly report",
-    "body": "# Weekly report\n\n| Metric | Value |\n|---|---:|\n| Sent | 1024 |\n\nSee the [dashboard](https://domain.tld).\n\n<img src=\"cid:logo\" alt=\"Logo\">",
-    "attachments": [
-      { "filename": "logo.png", "content": "iVBORw0KGgo...", "content_id": "logo" },
-      { "filename": "report.pdf", "content": "JVBERi0xLjQK..." }
-    ]
-  }'
+  --data-binary @- <<'EOF'
+{
+  "to": "foo@domain.tld",
+  "subject": "mail-proxy: markdown test",
+  "body": "# Hello from mail-proxy\n\nThis mail was written in **Markdown** and rendered to *HTML*.\n\n## Status\n\n| Service | State | Uptime |\n|---|---|---:|\n| api | up | 99.98% |\n| worker | degraded | 97.10% |\n\n## Todo\n\n- [x] Send a markdown mail\n- [ ] Send an html mail\n\n> Quotes, `inline code` and [links](https://www.rust-lang.org) work too.\n\n```rust\nfn main() {\n    println!(\"hello\");\n}\n```\n"
+}
+EOF
+```
+
+```sh
+curl -sS -X POST http://localhost:3000/send \
+  -H "Content-Type: application/json" \
+  --data-binary @- <<'EOF'
+{
+  "from": "Foo <foo@domain.tld>",
+  "to": ["Bar <bar@domain.tld>", "baz@domain.tld"],
+  "subject": "mail-proxy: html test",
+  "format": "html",
+  "body": "<!DOCTYPE html><html><body style=\"margin:0;padding:24px;background:#f6f8fa;font-family:Arial,sans-serif;\"><table role=\"presentation\" width=\"100%\" style=\"max-width:560px;margin:0 auto;background:#ffffff;border-radius:8px;\"><tr><td style=\"padding:32px;\"><h1 style=\"margin:0 0 16px;font-size:24px;color:#1f2328;\">Hello from mail-proxy</h1><p style=\"margin:0 0 24px;font-size:16px;line-height:1.5;color:#424a53;\">This mail was written in <strong>HTML</strong> with inline styles.</p><a href=\"https://www.rust-lang.org\" style=\"display:inline-block;padding:12px 20px;background:#0969da;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;\">Visit rust-lang.org</a></td></tr></table></body></html>"
+}
+EOF
 ```
 
 ### `GET /health`
