@@ -95,32 +95,77 @@ Errors are returned as `{"error": "..."}`:
 | `502`  | SMTP server rejected the mail or could not be reached.      |
 | `504`  | SMTP server timed out.                                      |
 
-#### Examples
+#### Markdown
 
-```sh
-curl -sS -X POST http://localhost:3000/send \
-  -H "Content-Type: application/json" \
-  --data-binary @- <<'EOF'
-{
-  "to": "foo@domain.tld",
-  "subject": "mail-proxy: markdown test",
-  "body": "# Hello from mail-proxy\n\nThis mail was written in **Markdown** and rendered to *HTML*.\n\n## Status\n\n| Service | State | Uptime |\n|---|---|---:|\n| api | up | 99.98% |\n| worker | degraded | 97.10% |\n\n## Todo\n\n- [x] Send a markdown mail\n- [ ] Send an html mail\n\n> Quotes, `inline code` and [links](https://www.rust-lang.org) work too.\n\n```rust\nfn main() {\n    println!(\"hello\");\n}\n```\n"
+````sh
+body=$(cat <<'EOF'
+# Hello from mail-proxy
+
+This mail was written in **Markdown** and rendered to *HTML*.
+
+## Status
+
+| Service | State    | Uptime |
+|---------|----------|-------:|
+| api     | up       | 99.98% |
+| worker  | degraded | 97.10% |
+
+## Todo
+
+- [x] Send a markdown mail
+- [ ] Send an html mail
+
+> Quotes, `inline code` and [links](https://www.rust-lang.org) work too.
+
+```rust
+fn main() {
+    println!("hello");
 }
-EOF
 ```
+EOF
+)
+
+jq -n --arg body "$body" '{
+  to: "foo@domain.tld",
+  subject: "mail-proxy: markdown test",
+  body: $body
+}' | curl -sS -X POST http://localhost:3000/send \
+  -H "Content-Type: application/json" \
+  --data-binary @-
+````
+
+#### HTML
 
 ```sh
-curl -sS -X POST http://localhost:3000/send \
-  -H "Content-Type: application/json" \
-  --data-binary @- <<'EOF'
-{
-  "from": "Foo <foo@domain.tld>",
-  "to": ["Bar <bar@domain.tld>", "baz@domain.tld"],
-  "subject": "mail-proxy: html test",
-  "format": "html",
-  "body": "<!DOCTYPE html><html><body style=\"margin:0;padding:24px;background:#f6f8fa;font-family:Arial,sans-serif;\"><table role=\"presentation\" width=\"100%\" style=\"max-width:560px;margin:0 auto;background:#ffffff;border-radius:8px;\"><tr><td style=\"padding:32px;\"><h1 style=\"margin:0 0 16px;font-size:24px;color:#1f2328;\">Hello from mail-proxy</h1><p style=\"margin:0 0 24px;font-size:16px;line-height:1.5;color:#424a53;\">This mail was written in <strong>HTML</strong> with inline styles.</p><a href=\"https://www.rust-lang.org\" style=\"display:inline-block;padding:12px 20px;background:#0969da;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;\">Visit rust-lang.org</a></td></tr></table></body></html>"
-}
+body=$(cat <<'EOF'
+<!DOCTYPE html>
+<html>
+  <body style="margin:0;padding:24px;background:#f6f8fa;font-family:Arial,sans-serif;">
+    <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:8px;">
+      <tr>
+        <td style="padding:32px;">
+          <h1 style="margin:0 0 16px;font-size:24px;color:#1f2328;">Hello from mail-proxy</h1>
+          <p style="margin:0 0 24px;font-size:16px;line-height:1.5;color:#424a53;">
+            This mail was written in <strong>HTML</strong> with inline styles.
+          </p>
+          <a href="https://www.rust-lang.org" style="display:inline-block;padding:12px 20px;background:#0969da;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">Visit rust-lang.org</a>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
 EOF
+)
+
+jq -n --arg body "$body" '{
+  from: "Foo <foo@domain.tld>",
+  to: ["Bar <bar@domain.tld>", "baz@domain.tld"],
+  subject: "mail-proxy: html test",
+  format: "html",
+  body: $body
+}' | curl -sS -X POST http://localhost:3000/send \
+  -H "Content-Type: application/json" \
+  --data-binary @-
 ```
 
 ### `GET /health`
