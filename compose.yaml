@@ -7,14 +7,12 @@ services:
     container_name: "mail-proxy"
     restart: "unless-stopped"
     networks:
-      - "mail-proxy"
-    ports:
-      - "3000:3000"
+      - "traefik"
     env_file:
       - ".env"
     environment:
       - "VERSION"
 
 networks:
-  mail-proxy:
+  traefik:
     external: true

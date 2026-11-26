@@ -1,0 +1,5 @@
+allow-expect-in-tests = true
+allow-indexing-slicing-in-tests = true
+allow-mixed-uninlined-format-args = false
+allow-panic-in-tests = true
+allow-unwrap-in-tests = true
